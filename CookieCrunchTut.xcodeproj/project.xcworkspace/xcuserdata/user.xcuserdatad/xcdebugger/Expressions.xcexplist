@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "static Dictionary.loadJSONFromBundle(filename : String) -&gt; [String : AnyObject]?:Extensions.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "pathURL">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
