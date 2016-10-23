@@ -250,6 +250,51 @@ class Level
         return columns
     }
     
+    //adds new cookies to fill the columns to the top (where necessary). Returns an array with the new Cookie objects for each column that had empty tiles. The cookie objects in this array are ordered from top to bottom
+    func topUpCookies() -> [[Cookie]]
+    {
+        var columns = [[Cookie]]()
+        var cookieType: CookieType = .Unknown
+        
+        for column in 0..<NumColumns
+        {
+            var array = [Cookie]()
+            
+            //loop through the column from top to bottom. This while loop ends when cookies[column, row] is not nil (ie when it has found a cookie)
+            var row = NumRows - 1
+            while row >= 0 && cookies[column, row] == nil
+            {
+                //ignore gaps in the level, because you only need to fill up grid squares that have a tile
+                if tiles[column, row] != nil
+                {
+                    //randomly create a new cookie type. It cannot be equal to the type of the last new cookie to prevent too many "free" matches
+                    var newCookieType: CookieType
+                    repeat
+                    {
+                        newCookieType = CookieType.random()
+                    } while (newCookieType == cookieType)
+                    
+                    cookieType = newCookieType
+                    
+                    //create the new Cookie object and add it to the array for this column
+                    let cookie = Cookie(column: column, row: row, cookieType: cookieType)
+                    cookies[column, row] = cookie
+                    array.append(cookie)
+                }
+                
+                row -= 1
+            }
+            
+            //if a column does not have any holes, you don;t add it to the final array
+            if !(array.isEmpty)
+            {
+                columns.append(array)
+            }
+        }
+        
+        return columns
+    }
+    
     //calls helper methods and then combines their results into a single set
     func removeMatches() -> Set<Chain>
     {

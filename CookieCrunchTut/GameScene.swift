@@ -328,6 +328,51 @@ class GameScene: SKScene {
         run(SKAction.wait(forDuration: longestDuration), completion: completion)
     }
     
+    func animateNewCookies(_ columns: [[Cookie]], completion: @escaping () -> ())
+    {
+        //the game is not allowed to continue until all the animations are complete, so we calculate the duration of the longest animation to use later
+        var longestDuration: TimeInterval = 0
+        
+        for array in columns
+        {
+            //the new cookie sprite should start out just above the first tile in this column. An easy way to find the row number of this tile is to look at the row of the first cookie in the array, which is always the top-most one for this column
+            let startRow = array[0].row + 1
+            
+            for (idx, cookie) in array.enumerated()
+            {
+                //create a new sprite for the cookie
+                let sprite = SKSpriteNode(imageNamed: cookie.cookieType.spriteName)
+                sprite.size = CGSize(width: TileWidth, height: TileHeight)
+                sprite.position = pointForColumn(column: cookie.column, row: startRow)
+                cookiesLayer.addChild(sprite)
+                cookie.sprite = sprite
+                
+                //the higher the cookie, the longer we make the delay, so the cookies appear to fall after one another
+                let delay = 0.1 + 0.2 * TimeInterval(array.count - idx - 1)
+                
+                //calculate the animation's duration based on how far the cookie has to fall
+                let duration = TimeInterval(startRow - cookie.row) * 0.1
+                longestDuration = max(longestDuration, duration + delay)
+                
+                //animate the sprite falling down and fading in. This makes the cookies appear less abruptly out of thin air at the top of the grid
+                let newPosition = pointForColumn(column: cookie.column, row: cookie.row)
+                let moveAction = SKAction.move(to: newPosition, duration: duration)
+                moveAction.timingMode = .easeOut
+                sprite.alpha = 0
+                sprite.run(SKAction.sequence([
+                    SKAction.wait(forDuration: delay),
+                    SKAction.group([
+                        SKAction.fadeIn(withDuration: 0.05),
+                        moveAction,
+                        addCookieSound])
+                ]))
+            }
+        }
+        
+        //wait until the animations are done before continuing the game
+        run(SKAction.wait(forDuration: longestDuration), completion: completion)
+    }
+    
     //gets the name of the highlight sprite imahe from the Cookie object and puts the corresponding texture on the selection sprite. Simply setting the texture on the sprite doesn;t give it the correct size but using an SKAction does. The selectionSprite is also made visible by setting its alpha to 1, and is added as a child of the cookie sprite so that it moves along with it in the swap animation
     func showSelectionIndicatorForCookie(cookie: Cookie)
     {
