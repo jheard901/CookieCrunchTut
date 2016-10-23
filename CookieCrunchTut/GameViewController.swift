@@ -50,6 +50,51 @@ class GameViewController: UIViewController {
         scene.addSpritesForCookies(cookies: newCookies)
     }
     
+    //the core gameplay logic
+    func handleSwipe(swap: Swap)
+    {
+        //disable player input while the swap is happening
+        view.isUserInteractionEnabled = false
+        
+        if(level.isPossibleSwap(swap))
+        {
+            //tell the level to perform the swap
+            level.performSwap(swap: swap)
+            
+            //then tell the scene to animate the swap (updating the view)
+            scene.animate(swap, completion: handleMatches)
+            
+            //reenable input on swap completion
+            self.view.isUserInteractionEnabled = true
+        }
+        else
+        {
+            //alternate way of writing this could be: scene.animateInvalidSwap(swap) { }
+            scene.animateInvalidSwap(swap, completion: {
+                
+                self.view.isUserInteractionEnabled = true
+            })
+            
+        }
+        
+    }
+    
+    //event for handling when matches occur | note: Swift requires using 'self' inside closures
+    func handleMatches() -> ()
+    {
+        let chains = level.removeMatches()
+        
+        scene.animateMatchedCookies(for: chains)
+        {
+            let columns = self.level.fillHoles()
+            self.scene.animateFallingCookies(columns: columns, completion: {
+                
+                self.view.isUserInteractionEnabled = true
+            })
+            
+        }
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,6 +111,9 @@ class GameViewController: UIViewController {
         level = Level(filename: "store/levels/Level_1") //Note, that json files do not work in the Assets.xcassets file so you need to reference them directly from the directory
         scene.level = level
         scene.addTiles()
+        
+        //assigns the handleSwipe() function to GameScene's swipeHandler property. Now whenever GameScene calls swipeHandler(swap), it actually calls a function in GameViewController | this works in Swift because functions and closures can be used interchangeably
+        scene.swipeHandler = handleSwipe
         
         //present scene
         skView.presentScene(scene)

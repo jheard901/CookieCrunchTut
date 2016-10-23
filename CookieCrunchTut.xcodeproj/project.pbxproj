@@ -20,8 +20,10 @@
 		CEA6F67D1DA5F78700F0D3E1 /* Cookie.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6F67C1DA5F78700F0D3E1 /* Cookie.swift */; };
 		CEA6F67F1DA66A4500F0D3E1 /* Array2D.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6F67E1DA66A4500F0D3E1 /* Array2D.swift */; };
 		CEA6F6811DA6723F00F0D3E1 /* Level.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6F6801DA6723F00F0D3E1 /* Level.swift */; };
-		CEA6F6831DA6930200F0D3E1 /* Tile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6F6821DA6930200F0D3E1 /* Tile.swift */; };
 		CEA6F6851DA694EA00F0D3E1 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6F6841DA694EA00F0D3E1 /* Extensions.swift */; };
+		CED8029D1DBCFE8800C8A211 /* Tile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED8029C1DBCFE8800C8A211 /* Tile.swift */; };
+		CED8029F1DBD114300C8A211 /* Swap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED8029E1DBD114300C8A211 /* Swap.swift */; };
+		CED802A11DBD40F200C8A211 /* Chain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED802A01DBD40F200C8A211 /* Chain.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,8 +63,10 @@
 		CEA6F67C1DA5F78700F0D3E1 /* Cookie.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cookie.swift; sourceTree = "<group>"; };
 		CEA6F67E1DA66A4500F0D3E1 /* Array2D.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Array2D.swift; sourceTree = "<group>"; };
 		CEA6F6801DA6723F00F0D3E1 /* Level.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Level.swift; sourceTree = "<group>"; };
-		CEA6F6821DA6930200F0D3E1 /* Tile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Tile.swift; path = ../Tile.swift; sourceTree = "<group>"; };
 		CEA6F6841DA694EA00F0D3E1 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		CED8029C1DBCFE8800C8A211 /* Tile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tile.swift; sourceTree = "<group>"; };
+		CED8029E1DBD114300C8A211 /* Swap.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Swap.swift; sourceTree = "<group>"; };
+		CED802A01DBD40F200C8A211 /* Chain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Chain.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,15 +122,17 @@
 				CEA6CA5B1DA5E202009BCF39 /* Actions.sks */,
 				CEA6CA5D1DA5E202009BCF39 /* GameScene.swift */,
 				CEA6CA5F1DA5E202009BCF39 /* GameViewController.swift */,
-				CEA6CA611DA5E202009BCF39 /* Main.storyboard */,
-				CEA6CA641DA5E202009BCF39 /* Assets.xcassets */,
 				CEA6F67C1DA5F78700F0D3E1 /* Cookie.swift */,
 				CEA6F6801DA6723F00F0D3E1 /* Level.swift */,
 				CEA6F67E1DA66A4500F0D3E1 /* Array2D.swift */,
-				CEA6F6821DA6930200F0D3E1 /* Tile.swift */,
 				CEA6F6841DA694EA00F0D3E1 /* Extensions.swift */,
-				CEA6CA661DA5E202009BCF39 /* LaunchScreen.storyboard */,
+				CED8029C1DBCFE8800C8A211 /* Tile.swift */,
+				CED8029E1DBD114300C8A211 /* Swap.swift */,
+				CED802A01DBD40F200C8A211 /* Chain.swift */,
+				CEA6CA611DA5E202009BCF39 /* Main.storyboard */,
+				CEA6CA641DA5E202009BCF39 /* Assets.xcassets */,
 				CEA6CA691DA5E202009BCF39 /* Info.plist */,
+				CEA6CA661DA5E202009BCF39 /* LaunchScreen.storyboard */,
 			);
 			path = CookieCrunchTut;
 			sourceTree = "<group>";
@@ -217,6 +223,7 @@
 				TargetAttributes = {
 					CEA6CA531DA5E202009BCF39 = {
 						CreatedOnToolsVersion = 8.0;
+						DevelopmentTeam = YZQ96BYSMJ;
 						ProvisioningStyle = Automatic;
 					};
 					CEA6CA6D1DA5E202009BCF39 = {
@@ -288,11 +295,13 @@
 				CEA6F6811DA6723F00F0D3E1 /* Level.swift in Sources */,
 				CEA6CA5E1DA5E202009BCF39 /* GameScene.swift in Sources */,
 				CEA6F67D1DA5F78700F0D3E1 /* Cookie.swift in Sources */,
+				CED8029D1DBCFE8800C8A211 /* Tile.swift in Sources */,
 				CEA6F6851DA694EA00F0D3E1 /* Extensions.swift in Sources */,
-				CEA6F6831DA6930200F0D3E1 /* Tile.swift in Sources */,
+				CED802A11DBD40F200C8A211 /* Chain.swift in Sources */,
 				CEA6CA601DA5E202009BCF39 /* GameViewController.swift in Sources */,
 				CEA6CA581DA5E202009BCF39 /* AppDelegate.swift in Sources */,
 				CEA6F67F1DA66A4500F0D3E1 /* Array2D.swift in Sources */,
+				CED8029F1DBD114300C8A211 /* Swap.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -442,6 +451,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = YZQ96BYSMJ;
 				INFOPLIST_FILE = CookieCrunchTut/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -455,6 +465,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = YZQ96BYSMJ;
 				INFOPLIST_FILE = CookieCrunchTut/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
