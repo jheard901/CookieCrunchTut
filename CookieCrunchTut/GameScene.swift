@@ -34,6 +34,8 @@ class GameScene: SKScene {
     private var swipeFromColumn: Int?
     private var swipeFromRow: Int?
     
+    private var precisePoint: CGPoint?
+    
     //marked as Level! with the '!' representing it will not initially have a value (ie in C++ this is a pointer!!!!)
     var level: Level!
     
@@ -76,6 +78,7 @@ class GameScene: SKScene {
         
         swipeFromColumn = nil
         swipeFromRow = nil
+        precisePoint = nil
         
         //pre-load the font for score
         let _ = SKLabelNode(fontNamed: "GillSans-BoldItalic")
@@ -194,11 +197,18 @@ class GameScene: SKScene {
                 //store the location of where swipe began
                 swipeFromColumn = column
                 swipeFromRow = row
+                
+                precisePoint = CGPoint(x: location.x, y: location.y)
             }
         }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?)
+    {
+        
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
     {
         
         //if swipeFromColumn is nil then the swipe is outside valid area of game already commited a cookie swap. This could be tracked in a separate Bool but using swipeFromColumn works because it is an optional
@@ -236,20 +246,19 @@ class GameScene: SKScene {
                 trySwap(horizontal: horzDelta, vertical: vertDelta)
             }
             
-            //By setting swipeFromColumn back to nil, the game will ignore the rest of this swipe motion
-            swipeFromColumn = nil
         }
-    }
-    
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?)
-    {
+        
         if(selectionSprite.parent != nil && swipeFromColumn != nil)
         {
             hideSelectionIndicator()
+            swipeFromColumn = nil
+            swipeFromRow = nil
         }
-        
-        swipeFromColumn = nil
-        swipeFromRow = nil
+        else
+        {
+            swipeFromColumn = nil
+            swipeFromRow = nil
+        }
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?)

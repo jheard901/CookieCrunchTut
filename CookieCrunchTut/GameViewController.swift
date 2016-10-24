@@ -225,7 +225,7 @@ class GameViewController: UIViewController {
         setupLevel(levelNum: currentLevelNum)
         
         //play bg music
-        //backgroundMusic?.play()
+        backgroundMusic?.play()
     }
     
     func setupLevel(levelNum: Int)

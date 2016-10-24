@@ -19,6 +19,11 @@
 
 //btw, the tutorial I'm using for this game provides a great explanation of MVC under header "The Scene and the View Controller" here: https://www.raywenderlich.com/125311/make-game-like-candy-crush-spritekit-swift-part-1
 
+/* Future Updates to Do */
+//follow suggestions (at bottom) from: https://www.raywenderlich.com/125313/make-game-like-candy-crush-spritekit-swift-part-4
+//add a sound effect for shuffling cookies
+
+
 import UIKit
 
 @UIApplicationMain
