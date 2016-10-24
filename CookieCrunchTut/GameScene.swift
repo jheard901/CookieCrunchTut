@@ -27,6 +27,9 @@ class GameScene: SKScene {
     
     var selectionSprite = SKSpriteNode()
     
+    let cropLayer = SKCropNode()
+    let maskLayer = SKNode()
+    
     //declaring variables with '?' means they are optionals and they should be initialized as nil when not in use
     private var swipeFromColumn: Int?
     private var swipeFromRow: Int?
@@ -34,8 +37,8 @@ class GameScene: SKScene {
     //marked as Level! with the '!' representing it will not initially have a value (ie in C++ this is a pointer!!!!)
     var level: Level!
     
-    let TileWidth: CGFloat = 32.0
-    let TileHeight: CGFloat = 36.0
+    let TileWidth: CGFloat = 40.0 //32.0 original size | need to swap this value depending on the device that runs the game (ie 6s, 6s plus, or se)
+    let TileHeight: CGFloat = 45.0 //36.0 original size
     
     let gameLayer = SKNode()
     let cookiesLayer = SKNode()
@@ -46,6 +49,8 @@ class GameScene: SKScene {
     {
         super.init(size: size)
         
+        
+        
         anchorPoint = CGPoint(x: 0.5, y: 0.5)
         
         //added the "Background" resource into the Asssets.xcassets file so I do not need to reference its file path relative to the project directory anymore!
@@ -55,18 +60,28 @@ class GameScene: SKScene {
         
         //to keep the SpriteKit node heirarchy organized, this class "GameScene" will use several layers - the base layer will be "gameLayer" which will serve as the container for all other layers
         addChild(gameLayer)
+        gameLayer.isHidden = true
         //since the anchor point is set at (0.5, 0.5) - this is the center of the screen and origin of where objects will appear when added as nodes - then the cookie layer should be moved backwards by half its width and height so that it will also be centered on the screen
         let layerPosition = CGPoint(x: -TileWidth * CGFloat(NumColumns) / 2, y: -TileHeight * CGFloat(NumRows) / 2)
         tilesLayer.position = layerPosition //the tiles layer is added first so that it will appear behind the cookies | subsequent layers added to the gameLayer will always appear on top of layers added earlier if they have the same zPosition
         gameLayer.addChild(tilesLayer)
+        
+        //cropLayer (an SKCropNode) is a special kind of node that only draws its children where the mask contains pixels
+        gameLayer.addChild(cropLayer)
+        maskLayer.position = layerPosition
+        cropLayer.maskNode = maskLayer
+        
         cookiesLayer.position = layerPosition
-        gameLayer.addChild(cookiesLayer)
+        cropLayer.addChild(cookiesLayer)
         
         swipeFromColumn = nil
         swipeFromRow = nil
+        
+        //pre-load the font for score
+        let _ = SKLabelNode(fontNamed: "GillSans-BoldItalic")
     }
     
-    //iterates through the set of cookies and addes a corresponding SKSpriteNode isntance to the cookie layer
+    //iterates through the set of cookies and addes a corresponding SKSpriteNode instance to the cookie layer
     func addSpritesForCookies(cookies: Set<Cookie>)
     {
         for cookie in cookies
@@ -76,6 +91,15 @@ class GameScene: SKScene {
             sprite.position = pointForColumn(column:cookie.column, row:cookie.row)
             cookiesLayer.addChild(sprite)
             cookie.sprite = sprite
+            
+            sprite.alpha = 0
+            sprite.xScale = 0.5
+            sprite.yScale = 0.5
+            
+            sprite.run(SKAction.sequence([
+                SKAction.wait(forDuration: 0.25, withRange: 0.5),
+                SKAction.group([SKAction.fadeIn(withDuration: 0.25), SKAction.scale(to: 1.0, duration: 0.25)])
+            ]))
         }
     }
     
@@ -107,13 +131,46 @@ class GameScene: SKScene {
             {
                 if level.tileAt(column: column, row: row) != nil
                 {
-                    let tileNode = SKSpriteNode(imageNamed: "Tile")
+                    let tileNode = SKSpriteNode(imageNamed: "MaskTile")
                     tileNode.size = CGSize(width: TileWidth, height: TileHeight)
                     tileNode.position = pointForColumn(column: column, row: row)
+                    maskLayer.addChild(tileNode)
+                }
+            }
+        }
+        
+        //draws a patten of border pieces in between the level tiles. Imagine dividing each tile into four quadrants; the four boolean variables indicate what kind of borders the tile has. eg in a square level, the tile in the lower-right corner would need a bg to cover the top-left only (see Tile_1.png). A tile with all neighboring tiles would get a full background (see Tile_15.png).
+        for row in 0...NumRows
+        {
+            for column in 0...NumColumns
+            {
+                let topLeft = (column > 0) && (row < NumRows) && level.tileAt(column: column - 1, row: row) != nil
+                let bottomLeft = (column > 0) && (row > 0) && level.tileAt(column: column - 1, row: row - 1) != nil
+                let topRight = (column < NumColumns) && (row < NumRows) && level.tileAt(column: column, row: row) != nil
+                let bottomRight = (column < NumColumns) && (row > 0) && level.tileAt(column: column, row: row - 1) != nil
+                
+                //the tiles are named from 0 to 15, according to the bitmask that is made by combined these four values
+                let value = Int(topLeft.hashValue) | Int(topRight.hashValue) << 1 | Int(bottomLeft.hashValue) << 2 | Int(bottomRight.hashValue) << 3
+                
+                //values 0 (no tiles), 6 and 9 (two opposite tiles) are not drawn
+                if(value != 0 && value != 6 && value != 9)
+                {
+                    let name = String(format: "Tile_%ld", value)
+                    let tileNode = SKSpriteNode(imageNamed: name)
+                    tileNode.size = CGSize(width: TileWidth, height: TileHeight)
+                    var point = pointForColumn(column: column, row: row)
+                    point.x -= TileWidth / 2
+                    point.y -= TileHeight / 2
+                    tileNode.position = point
                     tilesLayer.addChild(tileNode)
                 }
             }
         }
+    }
+    
+    func removeAllCookieSprites()
+    {
+        cookiesLayer.removeAllChildren()
     }
     
     //do not include super in this override because you want program to only use your defintion
@@ -275,6 +332,8 @@ class GameScene: SKScene {
     {
         for chain in chains
         {
+            animateScore(for: chain)
+            
             for cookie in chain.cookies
             {
                 if let sprite = cookie.sprite
@@ -373,6 +432,47 @@ class GameScene: SKScene {
         run(SKAction.wait(forDuration: longestDuration), completion: completion)
     }
     
+    //creates a new SKLabelNode with the score and places it in the center of the chain; the numbers float up a few pixels before disappearing
+    func animateScore(for chain: Chain)
+    {
+        //figure out what the midpoint of the chain is
+        let firstSprite = chain.firstCookie().sprite!
+        let lastSprite = chain.lastCookie().sprite!
+        let nX = (firstSprite.position.x + lastSprite.position.x) / 2
+        let nY = (firstSprite.position.y + lastSprite.position.y) / 2 - 8
+        let centerPosition = CGPoint(x: nX, y: nY)
+        
+        //add a lavel for the score that slowly floats up
+        let scoreLabel = SKLabelNode(fontNamed: "GillSans-BoldItalic")
+        scoreLabel.fontSize = 16
+        scoreLabel.text = String(format: "%ld", chain.score)
+        scoreLabel.position = centerPosition
+        scoreLabel.zPosition = 300
+        cookiesLayer.addChild(scoreLabel)
+        
+        let moveAction = SKAction.move(by: CGVector(dx: 0, dy: 3) , duration: 0.7)
+        moveAction.timingMode = .easeOut
+        scoreLabel.run(SKAction.sequence([moveAction, SKAction.removeFromParent()]))
+    }
+    
+    //animates the entire gameLayer out of the way
+    func animateLevelResult(_ completion: @escaping () -> ())
+    {
+        let action = SKAction.move(by: CGVector(dx: 0, dy: -size.height), duration: 0.3)
+        action.timingMode = .easeIn
+        gameLayer.run(action, completion: completion)
+    }
+    
+    //slides the gameLater back in from the top of the screen
+    func animateBeginGame(_ completion: @escaping () -> ())
+    {
+        gameLayer.isHidden = false
+        gameLayer.position = CGPoint(x: 0, y: size.height)
+        let action = SKAction.move(by: CGVector(dx: 0, dy: -size.height), duration: 0.3)
+        action.timingMode = .easeOut
+        gameLayer.run(action, completion: completion)
+    }
+    
     //gets the name of the highlight sprite imahe from the Cookie object and puts the corresponding texture on the selection sprite. Simply setting the texture on the sprite doesn;t give it the correct size but using an SKAction does. The selectionSprite is also made visible by setting its alpha to 1, and is added as a child of the cookie sprite so that it moves along with it in the swap animation
     func showSelectionIndicatorForCookie(cookie: Cookie)
     {
@@ -400,107 +500,6 @@ class GameScene: SKScene {
             SKAction.removeFromParent()
         ]))
     }
-    
-    /*
-     //content pre-built into the 'Game' template
-     
-     var entities = [GKEntity]()
-     var graphs = [String : GKGraph]()
-     
-     private var lastUpdateTime : TimeInterval = 0
-     private var label : SKLabelNode?
-     private var spinnyNode : SKShapeNode?
-     
-     override func sceneDidLoad() {
-     
-     self.lastUpdateTime = 0
-     
-     // Get label node from scene and store it for use later
-     self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
-     if let label = self.label {
-     label.alpha = 0.0
-     label.run(SKAction.fadeIn(withDuration: 2.0))
-     }
-     
-     // Create shape node to use during mouse interaction
-     let w = (self.size.width + self.size.height) * 0.05
-     self.spinnyNode = SKShapeNode.init(rectOf: CGSize.init(width: w, height: w), cornerRadius: w * 0.3)
-     
-     if let spinnyNode = self.spinnyNode {
-     spinnyNode.lineWidth = 2.5
-     
-     spinnyNode.run(SKAction.repeatForever(SKAction.rotate(byAngle: CGFloat(M_PI), duration: 1)))
-     spinnyNode.run(SKAction.sequence([SKAction.wait(forDuration: 0.5),
-     SKAction.fadeOut(withDuration: 0.5),
-     SKAction.removeFromParent()]))
-     }
-     }
-     
-     
-     func touchDown(atPoint pos : CGPoint) {
-     if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-     n.position = pos
-     n.strokeColor = SKColor.green
-     self.addChild(n)
-     }
-     }
-     
-     func touchMoved(toPoint pos : CGPoint) {
-     if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-     n.position = pos
-     n.strokeColor = SKColor.blue
-     self.addChild(n)
-     }
-     }
-     
-     func touchUp(atPoint pos : CGPoint) {
-     if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-     n.position = pos
-     n.strokeColor = SKColor.red
-     self.addChild(n)
-     }
-     }
-     
-     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-     if let label = self.label {
-     label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
-     }
-     
-     for t in touches { self.touchDown(atPoint: t.location(in: self)) }
-     }
-     
-     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-     for t in touches { self.touchMoved(toPoint: t.location(in: self)) }
-     }
-     
-     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-     for t in touches { self.touchUp(atPoint: t.location(in: self)) }
-     }
-     
-     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-     for t in touches { self.touchUp(atPoint: t.location(in: self)) }
-     }
-     
-     
-     override func update(_ currentTime: TimeInterval) {
-     // Called before each frame is rendered
-     
-     // Initialize _lastUpdateTime if it has not already been
-     if (self.lastUpdateTime == 0) {
-     self.lastUpdateTime = currentTime
-     }
-     
-     // Calculate time since last update
-     let dt = currentTime - self.lastUpdateTime
-     
-     // Update entities
-     for entity in self.entities {
-     entity.update(deltaTime: dt)
-     }
-     
-     self.lastUpdateTime = currentTime
-     }
-     */
     
     required init?(coder aDecoder: NSCoder)
     {

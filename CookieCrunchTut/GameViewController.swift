@@ -9,11 +9,30 @@
 import UIKit
 import SpriteKit
 import GameplayKit
+import AVFoundation
 
 class GameViewController: UIViewController {
     
     var scene: GameScene!
     var level: Level!
+    
+    var currentLevelNum = 1
+    var movesLeft = 0
+    var score = 0
+    
+    var tapGestureRecognizer: UITapGestureRecognizer!
+    
+    @IBOutlet weak var targetLabel: UILabel!
+    @IBOutlet weak var movesLabel: UILabel!
+    @IBOutlet weak var scoreLabel: UILabel!
+    @IBOutlet weak var levelResultPanel: UIImageView!
+    @IBOutlet weak var shuffleButton: UIButton!
+    
+    @IBAction func pressedShuffleButton(_: AnyObject)
+    {
+        shuffle()
+        decrementMoves()
+    }
     
     override var prefersStatusBarHidden: Bool
     {
@@ -39,13 +58,49 @@ class GameViewController: UIViewController {
          */
     }
     
+    //called after every turn to update the text inside the labels
+    func updateLabels()
+    {
+        targetLabel.text = String(format: "%ld", level.targetScore)
+        movesLabel.text = String(format: "%ld", movesLeft)
+        scoreLabel.text = String(format: "%ld", score)
+    }
+    
+    //the initialization code sits in a closure, it loads the background music MP3 and sets it to loop forever. Because the variable is marked lazy, the code from the closure will not run until backgroundMusic is first accessed
+    lazy var backgroundMusic: AVAudioPlayer? = {
+        
+        guard let url = Bundle.main.url(forResource: "store/sounds/Mining by Moonlight", withExtension: "mp3") else
+        {
+            return nil
+        }
+        
+        do
+        {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.numberOfLoops = -1
+            return player
+        } catch { return nil }
+        
+    }()
+    
+    
     func beginGame()
     {
+        movesLeft = level.maximumMoves
+        score = 0
+        updateLabels()
+        level.resetComboMultiplier()
+        scene.animateBeginGame()
+        {
+            self.shuffleButton.isHidden = false
+        }
+        
         shuffle()
     }
     
     func shuffle()
     {
+        scene.removeAllCookieSprites() //cleanup after a level is over
         let newCookies = level.shuffle()
         scene.addSpritesForCookies(cookies: newCookies)
     }
@@ -91,6 +146,12 @@ class GameViewController: UIViewController {
         
         scene.animateMatchedCookies(for: chains)
         {
+            for chain in chains
+            {
+                self.score += chain.score
+            }
+            self.updateLabels()
+            
             let columns = self.level.fillHoles()
             self.scene.animateFallingCookies(columns: columns)
             {
@@ -106,13 +167,69 @@ class GameViewController: UIViewController {
     
     func beginNextTurn()
     {
+        level.resetComboMultiplier()
         level.detectPossibleSwaps()
         view.isUserInteractionEnabled = true
+        decrementMoves()
+    }
+    
+    //decrements the counter keeping track of the number of moves and updates the onscreen labels
+    func decrementMoves()
+    {
+        movesLeft -= 1
+        updateLabels()
+        
+        if (score >= level.targetScore)
+        {
+            levelResultPanel.image = UIImage(named: "LevelComplete")
+            currentLevelNum = currentLevelNum < NumLevels ? currentLevelNum + 1 : 1
+            showLevelResult()
+        }
+        else if (movesLeft == 0)
+        {
+            levelResultPanel.image = UIImage(named: "GameOver")
+            showLevelResult()
+        }
+    }
+    
+    //unhides the image view, disables touches on the scene, and adds a tap gesture recognizer that will restart the game
+    func showLevelResult()
+    {
+        shuffleButton.isHidden = true
+        levelResultPanel.isHidden = false
+        scene.isUserInteractionEnabled = false
+        
+        scene.animateLevelResult()
+        {
+            self.tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.hideLevelResult))
+            self.view.addGestureRecognizer(self.tapGestureRecognizer)
+        }
+    }
+    
+    //hides the level result panel and restarts the game
+    func hideLevelResult()
+    {
+        view.removeGestureRecognizer(tapGestureRecognizer)
+        tapGestureRecognizer = nil
+        
+        levelResultPanel.isHidden = true
+        scene.isUserInteractionEnabled = true
+        
+        setupLevel(levelNum: currentLevelNum)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        //setp view with the current level
+        setupLevel(levelNum: currentLevelNum)
+        
+        //play bg music
+        //backgroundMusic?.play()
+    }
+    
+    func setupLevel(levelNum: Int)
+    {
         //configure the view
         let skView = view as! SKView
         skView.isMultipleTouchEnabled = false
@@ -122,47 +239,21 @@ class GameViewController: UIViewController {
         scene.scaleMode = .aspectFill
         
         //instantiates a Level
-        level = Level(filename: "store/levels/Level_1") //Note, that json files do not work in the Assets.xcassets file so you need to reference them directly from the directory
+        level = Level(filename: "store/levels/Level_\(levelNum)") //Note, that json files do not work in the Assets.xcassets file so you need to reference them directly from the directory
         scene.level = level
         scene.addTiles()
         
         //assigns the handleSwipe() function to GameScene's swipeHandler property. Now whenever GameScene calls swipeHandler(swap), it actually calls a function in GameViewController | this works in Swift because functions and closures can be used interchangeably
         scene.swipeHandler = handleSwipe
         
+        //hide UI elements at start
+        levelResultPanel.isHidden = true
+        shuffleButton.isHidden = true
+        
         //present scene
         skView.presentScene(scene)
         
         beginGame()
-        
-        /*
-         //content pre-built into the 'Game' template
-         
-         // Load 'GameScene.sks' as a GKScene. This provides gameplay related content
-         // including entities and graphs.
-         if let scene = GKScene(fileNamed: "GameScene") {
-         
-         // Get the SKScene from the loaded GKScene
-         if let sceneNode = scene.rootNode as! GameScene? {
-         
-         // Copy gameplay related content over to the scene
-         sceneNode.entities = scene.entities
-         sceneNode.graphs = scene.graphs
-         
-         // Set the scale mode to scale to fit the window
-         sceneNode.scaleMode = .aspectFill
-         
-         // Present the scene
-         if let view = self.view as! SKView? {
-         view.presentScene(sceneNode)
-         
-         view.ignoresSiblingOrder = true
-         
-         view.showsFPS = true
-         view.showsNodeCount = true
-         }
-         }
-         }
-         */
     }
     
     override func didReceiveMemoryWarning() {

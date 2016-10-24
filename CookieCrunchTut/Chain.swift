@@ -12,6 +12,7 @@ import Foundation
 //a chain has a list of cookie objects and a type: it's either horizontal (a row of cookies) or vertical (a column). The type is defined as an enum, it is nested insided the Chain class because these two things are tightly coupled. More advanced chains types can be added later on such as L shaped or T shaped chains. An array is used here to store the cookie objects because it's convenient to remeber the order of the cookie objects so you know which cookies are at the ends of the chain
 class Chain: Hashable, CustomStringConvertible
 {
+    var score = 0
     var cookies = [Cookie]()
     
     enum ChainType: CustomStringConvertible

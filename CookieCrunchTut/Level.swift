@@ -11,8 +11,15 @@ import Foundation
 let NumColumns = 9
 let NumRows = 9
 
+let NumLevels = 4 //excluding level 0
+
 class Level
 {
+    var targetScore = 0
+    var maximumMoves = 0
+    
+    private var comboMultiplier = 0
+    
     //contains Swap objects | if player tries to swap two cookies not in the set then the game will not accept the swap as a valid move
     private var possibleSwaps = Set<Swap>()
     
@@ -304,6 +311,9 @@ class Level
         removeCookies(chains: horizontalChains)
         removeCookies(chains: verticalChains)
         
+        calculateScores(for: horizontalChains)
+        calculateScores(for: verticalChains)
+        
         return horizontalChains.union(verticalChains)
     }
     
@@ -421,6 +431,21 @@ class Level
         swap.cookieA.row = rowB
     }
     
+    private func calculateScores(for chains: Set<Chain>)
+    {
+        //3-chain is 60 pts, 4-chain is 120, 5-chain is 180, and so on...
+        for chain in chains
+        {
+            chain.score = 60 * (chain.length - 2) * comboMultiplier
+            comboMultiplier += 1
+        }
+    }
+    
+    func resetComboMultiplier()
+    {
+        comboMultiplier = 1
+    }
+    
     
     init(filename: String)
     {
@@ -442,6 +467,9 @@ class Level
                 }
             }
         }
+        
+        targetScore = dictionary["targetScore"] as! Int
+        maximumMoves = dictionary["moves"] as! Int
     }
     
     
